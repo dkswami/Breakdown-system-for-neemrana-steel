@@ -141,17 +141,17 @@ void httpRequest()
       }
       
       const char* value = doc["value"];
-    
-      Serial.print("get data!:");
-      Serial.println(value);
-
-       if (strcmp(value, "ON") == 0) 
+      if (strcmp(value, "ON") == 0) 
           state = 1;   
        else if (strcmp(value, "OFF") == 0) 
           state = 0;
        else
           state = 2;   
       
+      Serial.print("get data!:");
+      Serial.println(value);
+
+       
     
   } else {
       // if you couldn't make a connection:

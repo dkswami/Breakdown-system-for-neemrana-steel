@@ -26,8 +26,9 @@
 #define AIO_button1_FEED "pushbuttona"
 #define AIO_button2_FEED "pushbuttonb"
 #define AIO_button3_FEED "pushbuttonc"
-
+#define AIO_buzzer_FEED "on-off"
 // Libraries
+
 #include <AdafruitIO_WiFi.h>
 
 
@@ -37,7 +38,9 @@ int button2 = 4;
 int button3 = 5;
 int button4 = 6;
 
-bool last = false;
+String b1status = "NOT Pressed";
+String b2status = "NOT Pressed";
+String b3status = "NOT Pressed";
 
 
 
@@ -46,6 +49,7 @@ AdafruitIO_WiFi aio(AIO_USERNAME, AIO_KEY, WIFI_SSID, WIFI_PASS, SPIWIFI_SS, SPI
 AdafruitIO_Feed *pushbuttona = aio.feed(AIO_button1_FEED);
 AdafruitIO_Feed *pushbuttonb = aio.feed(AIO_button2_FEED);
 AdafruitIO_Feed *pushbuttonc = aio.feed(AIO_button3_FEED);
+AdafruitIO_Feed *buzzer = aio.feed(AIO_buzzer_FEED);
 
 void setup() {
    // Pin configuration
@@ -71,6 +75,7 @@ void setup() {
    pushbuttona->get();// request feed value (message) from AIO
    pushbuttonb->get();
    pushbuttonc->get();
+   buzzer->get();
 }
 
 
@@ -80,52 +85,53 @@ void loop() {
   // we have to flip the logic because we are
   // using a pullup resistor.
   if(digitalRead(button1) == LOW){
-    char b1status[] = "Pressed";
+    b1status = "Pressed";
+    String buzzerstatus = "ON";
     Serial.print("sending button1 -> ");
     Serial.println(b1status);
     pushbuttona->save(b1status);
+    buzzer->save(buzzerstatus);
+    
     while(digitalRead(button1) == LOW) // Wait for switch to be released
       {
         delay(20);
       }
   }  
   else if(digitalRead(button2) == LOW){
-    char b2status[] = "Pressed";
+    b2status = "Pressed";
+    String buzzerstatus = "ON";
     Serial.print("sending button2 -> ");
     Serial.println(b2status);
     pushbuttonb->save(b2status);
+    buzzer->save(buzzerstatus);
+    
     while(digitalRead(button2) == LOW) // Wait for switch to be released
       {
         delay(20);
       }
   }
   else if(digitalRead(button3) == LOW){
-    char b3status[] = "Pressed";
+    b3status = "Pressed";
+    String buzzerstatus = "ON";
     Serial.print("sending button3 -> ");
     Serial.println(b3status);
     pushbuttonc->save(b3status);
+    buzzer->save(buzzerstatus);
+    
     while(digitalRead(button3) == LOW) // Wait for switch to be released
       {
         delay(20);
       }
   }
   else if(digitalRead(button4) == LOW){
-    return;
+    b1status = "NOT Pressed";
+    b2status = "NOT Pressed";
+    b3status = "NOT Pressed";
+    String buzzerstatus = "OFF";
+    Serial.println("All value reset and Sound Alert Stopped");
+    pushbuttona->save(b1status);
+    pushbuttonb->save(b2status);
+    pushbuttonc->save(b3status);
+    buzzer->save(buzzerstatus);
   }
-  /*else{
-    char bstatus[] = "Not Pressed";
-    Serial.print("sending button ideal status");
-    Serial.print(bstatus);
-    
-  }*/
-
-  /* return if the value hasn't changed
-  if(current == last)
-    return;*/
-
-  // save the current state to the 'digital' feed on adafruit io
-
-
-  // store last button state
-  //last = current;
 }
