@@ -1,21 +1,4 @@
 // AIO_LED_Pot - AIO_LED_Pot.ino
-//
-// Description:
-// Interfaces an LED and a potentiometer on an Arduino Uno WiFi Rev2 with the
-// Adafruit IO service.
-// Note: Must use Adafruit's modified version of the WiFiNINA library
-// (https://github.com/adafruit/WiFiNINA), define USE_AIRLIFT, and instantiate
-// AdafruitIO_WiFi with pin connections for Arduino Uno WiFi Rev2 compatability.
-// NOTE: The sketch sometimes gets stuck initially connecting to the service and
-// needs to be reuploaded.
-//
-// Circuit:
-// Red LED connected to pin D2.
-// 10K potentiometer connected to pin A0.
-//
-// Created by John Woolsey on 05/29/2019.
-// Copyright © 2019 Woolsey Workshop.  All rights reserved.
-
 
 // Defines
 #define AIO_USERNAME    "dkswami"
@@ -27,16 +10,22 @@
 #define AIO_button2_FEED "pushbuttonb"
 #define AIO_button3_FEED "pushbuttonc"
 #define AIO_buzzer_FEED "on-off"
+#define AIO_connection_FEED "inputstationstatus"
 // Libraries
 
 #include <AdafruitIO_WiFi.h>
 
 
 // Pin Mapping
-int button1 = 3;
-int button2 = 4;
-int button3 = 5;
-int button4 = 6;
+int button1 = 8;
+int button2 = 9;
+int button3 = 10;
+int button4 = 11;
+int powerLED = 2;
+int RedWifiLED = 3;
+int GreenWifiLED = 4;
+int InternetLED = 5;
+int BuzzerLED = 6;
 
 String b1status = "NOT Pressed";
 String b2status = "NOT Pressed";
@@ -50,13 +39,20 @@ AdafruitIO_Feed *pushbuttona = aio.feed(AIO_button1_FEED);
 AdafruitIO_Feed *pushbuttonb = aio.feed(AIO_button2_FEED);
 AdafruitIO_Feed *pushbuttonc = aio.feed(AIO_button3_FEED);
 AdafruitIO_Feed *buzzer = aio.feed(AIO_buzzer_FEED);
+AdafruitIO_Feed *inputStationStatus = aio.feed(AIO_connection_FEED);
 
 void setup() {
    // Pin configuration
    pinMode(button1, INPUT_PULLUP);
    pinMode(button2, INPUT_PULLUP);
    pinMode(button3, INPUT_PULLUP);
+   pinMode(powerLED, OUTPUT);
+   pinMode(RedWifiLED, OUTPUT);
+   pinMode(GreenWifiLED, OUTPUT);
+   pinMode(BuzzerLED, OUTPUT);
 
+   digitalWrite(powerLED, HIGH);
+   digitalWrite(GreenWifiLED, HIGH);
    // Serial bus initialization (Serial Monitor)
    Serial.begin(9600);
    while(!Serial);  // wait for serial connection
@@ -71,11 +67,16 @@ void setup() {
    Serial.println();
    Serial.println(aio.statusText());  // print AIO connection status
 
+   //sending connection status to cloud
+   String connectionStatus = "Device Connected";
+   inputStationStatus->save(connectionStatus);
+   
    // Synchronize current state
    pushbuttona->get();// request feed value (message) from AIO
    pushbuttonb->get();
    pushbuttonc->get();
    buzzer->get();
+   inputStationStatus->get();
 }
 
 
