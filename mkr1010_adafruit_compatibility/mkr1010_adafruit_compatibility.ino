@@ -32,9 +32,7 @@ WiFiClient client;
 
 int state = 2;
 int relay_pin = 5;
-int powerLED = 1;
-int wifiLED = 2;
-int BuzzerLED = 3;
+
 
 void setup() {
 
@@ -42,11 +40,7 @@ void setup() {
   //while (!Serial);   // wait for serial port to connect. Needed for native USB port only
   
   pinMode(relay_pin, OUTPUT);     // Relay
-  pinMode(powerLED, OUTPUT);
-  pinMode(wifiLED, OUTPUT);
-  pinMode(BuzzerLED, OUTPUT);
 
-  digitalWrite(powerLED, HIGH);
   ConectToWIFI();
 
   

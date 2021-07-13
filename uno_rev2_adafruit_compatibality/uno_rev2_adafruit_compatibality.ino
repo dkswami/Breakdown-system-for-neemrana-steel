@@ -1,5 +1,6 @@
 // AIO_LED_Pot - AIO_LED_Pot.ino
 
+
 // Defines
 #define AIO_USERNAME    "dkswami"
 #define AIO_KEY         "aio_hicZ88WvIeJFV2JiKKJj61ArcJJ1"
@@ -26,11 +27,16 @@ int RedWifiLED = 3;
 int GreenWifiLED = 4;
 int InternetLED = 5;
 int BuzzerLED = 6;
+int status = WL_IDLE_STATUS;
 
 String b1status = "NOT Pressed";
 String b2status = "NOT Pressed";
 String b3status = "NOT Pressed";
 
+// for INTERNET LED to blink
+unsigned long previousMillis = 0;
+const long interval = 500;
+int ledState = LOW;
 
 
 // Constructors
@@ -49,24 +55,18 @@ void setup() {
    pinMode(powerLED, OUTPUT);
    pinMode(RedWifiLED, OUTPUT);
    pinMode(GreenWifiLED, OUTPUT);
+   pinMode(InternetLED, OUTPUT);
    pinMode(BuzzerLED, OUTPUT);
 
    digitalWrite(powerLED, HIGH);
-   digitalWrite(GreenWifiLED, HIGH);
+   
    // Serial bus initialization (Serial Monitor)
    Serial.begin(9600);
    while(!Serial);  // wait for serial connection
 
-   // Adafruit IO connection and configuration
-   Serial.print("Connecting to Adafruit IO");
-   aio.connect();  // connect to Adafruit IO service
-   while(aio.status() < AIO_CONNECTED) {
-      Serial.print(".");
-      delay(1000);  // wait 1 second between checks
-   }
-   Serial.println();
-   Serial.println(aio.statusText());  // print AIO connection status
-
+   //connects to the wifi and cloud service
+   connecting();
+   
    //sending connection status to cloud
    String connectionStatus = "Device Connected";
    inputStationStatus->save(connectionStatus);
@@ -81,58 +81,101 @@ void setup() {
 
 
 void loop() {
-   aio.run();  // keep client connected to AIO service
-  // grab the current state of the button.
-  // we have to flip the logic because we are
-  // using a pullup resistor.
-  if(digitalRead(button1) == LOW){
-    b1status = "Pressed";
-    String buzzerstatus = "ON";
-    Serial.print("sending button1 -> ");
-    Serial.println(b1status);
-    pushbuttona->save(b1status);
-    buzzer->save(buzzerstatus);
-    
-    while(digitalRead(button1) == LOW) // Wait for switch to be released
-      {
-        delay(20);
-      }
-  }  
-  else if(digitalRead(button2) == LOW){
-    b2status = "Pressed";
-    String buzzerstatus = "ON";
-    Serial.print("sending button2 -> ");
-    Serial.println(b2status);
-    pushbuttonb->save(b2status);
-    buzzer->save(buzzerstatus);
-    
-    while(digitalRead(button2) == LOW) // Wait for switch to be released
-      {
-        delay(20);
-      }
+  /*if(WiFi.status() != WL_CONNECTED) {
+    digitalWrite(GreenWifiLED, LOW);
+    connecting();
   }
-  else if(digitalRead(button3) == LOW){
-    b3status = "Pressed";
-    String buzzerstatus = "ON";
-    Serial.print("sending button3 -> ");
-    Serial.println(b3status);
-    pushbuttonc->save(b3status);
-    buzzer->save(buzzerstatus);
+  else {*/
     
-    while(digitalRead(button3) == LOW) // Wait for switch to be released
-      {
-        delay(20);
+      // the interval at which you want to blink the LED.
+      unsigned long currentMillis = millis();
+      if (currentMillis - previousMillis >= interval) {
+        // save the last time you blinked the LED
+        previousMillis = currentMillis;
+        // if the LED is off turn it on and vice-versa:
+        if (ledState == LOW) {
+          ledState = HIGH;
+        } else {
+          ledState = LOW;
+        }
+    
+        // set the LED with the ledState of the variable:
+        digitalWrite(InternetLED, ledState);
       }
-  }
-  else if(digitalRead(button4) == LOW){
-    b1status = "NOT Pressed";
-    b2status = "NOT Pressed";
-    b3status = "NOT Pressed";
-    String buzzerstatus = "OFF";
-    Serial.println("All value reset and Sound Alert Stopped");
-    pushbuttona->save(b1status);
-    pushbuttonb->save(b2status);
-    pushbuttonc->save(b3status);
-    buzzer->save(buzzerstatus);
-  }
+
+      
+      aio.run();  // keep client connected to AIO service
+      // grab the current state of the button.
+      // we have to flip the logic because we are
+      // using a pullup resistor.
+      if(digitalRead(button1) == LOW){
+        b1status = "Pressed";
+        String buzzerstatus = "ON";
+        Serial.print("sending button1 -> ");
+        Serial.println(b1status);
+        pushbuttona->save(b1status);
+        buzzer->save(buzzerstatus);
+        digitalWrite(BuzzerLED, HIGH);
+        while(digitalRead(button1) == LOW) // Wait for switch to be released
+          {
+            delay(20);
+          }
+      }  
+      else if(digitalRead(button2) == LOW){
+        b2status = "Pressed";
+        String buzzerstatus = "ON";
+        Serial.print("sending button2 -> ");
+        Serial.println(b2status);
+        pushbuttonb->save(b2status);
+        buzzer->save(buzzerstatus);
+        digitalWrite(BuzzerLED, HIGH);
+        while(digitalRead(button2) == LOW) // Wait for switch to be released
+          {
+            delay(20);
+          }
+      }
+      else if(digitalRead(button3) == LOW){
+        b3status = "Pressed";
+        String buzzerstatus = "ON";
+        Serial.print("sending button3 -> ");
+        Serial.println(b3status);
+        pushbuttonc->save(b3status);
+        buzzer->save(buzzerstatus);
+        digitalWrite(BuzzerLED, HIGH);
+        while(digitalRead(button3) == LOW) // Wait for switch to be released
+          {
+            delay(20);
+          }
+      }
+      else if(digitalRead(button4) == LOW){
+        b1status = "NOT Pressed";
+        b2status = "NOT Pressed";
+        b3status = "NOT Pressed";
+        String buzzerstatus = "OFF";
+        Serial.println("All value reset and Sound Alert Stopped");
+        pushbuttona->save(b1status);
+        pushbuttonb->save(b2status);
+        pushbuttonc->save(b3status);
+        buzzer->save(buzzerstatus);
+        digitalWrite(BuzzerLED, LOW);
+      }
+  //}
+  
+}
+
+void connecting() {
+   // Adafruit IO connection and configuration
+   Serial.print("Connecting to Adafruit IO");
+   aio.connect();  // connect to Adafruit IO service
+   while(aio.status() < AIO_CONNECTED) {
+      Serial.print(".");
+      digitalWrite(RedWifiLED, HIGH);
+      delay(500);  // wait 1 second between checks
+      digitalWrite(RedWifiLED, LOW);
+      delay(500);
+   }
+
+    digitalWrite(GreenWifiLED, HIGH);
+   Serial.println(aio.statusText());  // print AIO connection status
+   
 }
