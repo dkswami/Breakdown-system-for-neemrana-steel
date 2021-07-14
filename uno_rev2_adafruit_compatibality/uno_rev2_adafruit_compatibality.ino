@@ -4,7 +4,7 @@
 // Defines
 #define AIO_USERNAME    "dkswami"
 #define AIO_KEY         "aio_hicZ88WvIeJFV2JiKKJj61ArcJJ1"
-#define WIFI_SSID       "PQRS"
+#define WIFI_SSID       "GK Industrial Sol"
 #define WIFI_PASS       "nothing20"
 #define USE_AIRLIFT     // required for Arduino Uno WiFi R2 board compatability
 #define AIO_button1_FEED "pushbuttona"
