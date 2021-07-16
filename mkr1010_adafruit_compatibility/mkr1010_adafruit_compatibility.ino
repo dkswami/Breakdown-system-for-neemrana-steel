@@ -1,22 +1,4 @@
-
-
-/*
- * 
-  by @avilmaru
-  this example gets the last data of a "feed" from Adafruit IOT Cloud
-  (values ON and OFF) and turn ON / OFF a lamp
-  
-  The circuit:
-  - Arduino MKR board
-  - Arduino MKR CONNECTOR CARRIER 
-  - Ks0011 keyestudio 5V Relay Module
-  
- */
-
 #include <ArduinoJson.h>  
-
-
-/////////////////////////
 #include <WiFiNINA.h>
 #include "arduino_secrets.h" 
 
@@ -25,17 +7,13 @@ char pass[] = SECRET_PASS;         // your network password (use for WPA, or use
 int status = WL_IDLE_STATUS;
 char server[] = "io.adafruit.com"; // name address for Adafruit IOT Cloud
 
-///////////////////////////
-
 // Initialize the client library
 WiFiClient client;
 
 int state = 2;
 int relay_pin = 5;
 
-
 void setup() {
-
   Serial.begin(9600);
   while (!Serial);   // wait for serial port to connect. Needed for native USB port only
   pinMode(relay_pin, OUTPUT);     // Relay
@@ -43,12 +21,9 @@ void setup() {
 }
 
 void loop() {
-    
     httpRequest();
     if (state == 1) 
      tone(relay_pin, 1000);   //Turn on relay
-    else if (state == 0) 
-      noTone(relay_pin);   //Turn off relay
     else
       noTone(relay_pin);   //Turn off relay
 
@@ -59,9 +34,7 @@ void loop() {
 // this method makes a HTTP connection to the server:
 void httpRequest() 
 {
-
   // JSon
-  
 /*
  * GET: /api/v2/{username}/feeds/{feed_key}/data/last
 {
@@ -79,8 +52,6 @@ void httpRequest()
   "created_epoch": 0
 }
  */
-
-
   // close any connection before send a new request.
   // This will free the socket on the Nina module
   client.stop();
@@ -88,7 +59,6 @@ void httpRequest()
   Serial.println("\nStarting connection to server...");
   if (client.connect(server, 80)) 
   {
-    
       Serial.println("connected to server");
       // Make a HTTP request:
       client.println("GET /api/v2/" IO_USERNAME "/feeds/on-off/data/last HTTP/1.1"); 
@@ -163,18 +133,6 @@ void httpRequest()
 
 void ConectToWIFI()
 {
-   // check for the WiFi module:
-  if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("Communication with WiFi module failed!");
-    // don't continue
-    while (true);
-  }
-
-  String fv = WiFi.firmwareVersion();
-  if (fv < "1.0.0") {
-    Serial.println("Please upgrade the firmware");
-  }
-
   // attempt to connect to Wifi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
