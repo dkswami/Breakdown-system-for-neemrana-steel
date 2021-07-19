@@ -18,6 +18,7 @@ void setup() {
   while (!Serial);   // wait for serial port to connect. Needed for native USB port only
   pinMode(relay_pin, OUTPUT);     // Relay
   ConectToWIFI(); 
+  httpRequestPost();
 }
 
 void loop() {
@@ -129,7 +130,75 @@ void httpRequest()
 
 }
 
+void httpRequestPost() 
+{
+
   
+/*
+ * https://io.adafruit.com/api/docs/#operation/createGroupData
+ * 
+ * POST /{username}/groups/{group_key}/data
+ * 
+ * JSON:
+ * 
+{
+  "location": {
+    "lat": 0,
+    "lon": 0,
+    "ele": 0
+  },
+  "feeds": [
+    {
+      "key": "string",
+      "value": "string"
+    }
+  ],
+  "created_at": "string"
+}
+ */
+
+  StaticJsonDocument<96> doc;
+
+  doc["key"] = "outputstationstatus";
+  doc["value"] = "Connected";
+  /*// Add the "feeds" array
+  JsonArray feeds = doc.createNestedArray("feeds");
+  JsonObject feed1 = feeds.createNestedObject();
+  feed1["key"] = "outputstationstatus";
+  feed1["value"] = "connected";*/
+  
+  // close any connection before send a new request.
+  // This will free the socket on the Nina module
+  client.stop();
+
+  Serial.println("\nStarting connection to server...");
+  if (client.connect(server, 80)) 
+  {
+    Serial.println("connected to server");
+    // Make a HTTP request:
+    client.println("POST /api/v2/" IO_USERNAME "/feeds/outputstationstatus/data HTTP/1.1"); 
+    client.println("Host: io.adafruit.com");  
+    client.println("Connection: close");  
+    client.print("Content-Length: ");  
+    client.println(measureJson(doc));  
+    client.println("Content-Type: application/json");  
+    client.println("X-AIO-Key: " IO_KEY); 
+
+    // Terminate headers with a blank line
+    client.println();
+    serializeJsonPretty(doc, Serial);
+    // Send JSON document in body
+    serializeJson(doc, client);
+    Serial.println("data sent!");
+    
+  } else {
+    // if you couldn't make a connection:
+    Serial.println("connection failed!");
+  }
+
+  
+}
+
 
 void ConectToWIFI()
 {
@@ -141,7 +210,7 @@ void ConectToWIFI()
     status = WiFi.begin(ssid, pass);
 
     // wait 10 seconds for connection:
-    delay(10000);
+    delay(5000);
   }
   Serial.println("Connected to wifi");
   printWifiStatus();
