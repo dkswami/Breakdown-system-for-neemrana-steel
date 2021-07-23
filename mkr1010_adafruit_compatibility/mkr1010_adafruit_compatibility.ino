@@ -1,5 +1,6 @@
 #include <ArduinoJson.h>  
 #include <WiFiNINA.h>
+#include <LiquidCrystal.h>
 #include "arduino_secrets.h" 
 
 char ssid[] = SECRET_SSID;         // your network SSID (name)
@@ -11,25 +12,38 @@ char server[] = "io.adafruit.com"; // name address for Adafruit IOT Cloud
 WiFiClient client;
 
 int state = 2;
-int relay_pin = 5;
+int relay_pin = 8;
+
+// LCD variables
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+const int potentPin = A0;
+int potentVal = 365;
 
 void setup() {
+  analogWrite(potentPin, potentVal/4);
+  lcd.begin(16, 2);
+  lcd.print("hello, world!");
+  
   Serial.begin(9600);
-  while (!Serial);   // wait for serial port to connect. Needed for native USB port only
+  while (!Serial);  // wait for serial port to connect. Needed for native USB port only
   pinMode(relay_pin, OUTPUT);     // Relay
+  
   ConectToWIFI(); 
   httpRequestPost();
 }
 
 void loop() {
-    httpRequest();
-    if (state == 1) 
-     tone(relay_pin, 1000);   //Turn on relay
-    else
-      noTone(relay_pin);   //Turn off relay
+  lcd.setCursor(0, 1);
+  // print the number of seconds since reset:
+  lcd.print(millis() / 1000);
+  httpRequest();
+  if (state == 1) 
+    tone(relay_pin, 1000);   //Turn on relay
+  else
+    noTone(relay_pin);   //Turn off relay
 
-    Serial.println(state);
- 
+  Serial.println(state);
 }
 
 // this method makes a HTTP connection to the server:
