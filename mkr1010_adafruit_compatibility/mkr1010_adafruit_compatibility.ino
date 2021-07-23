@@ -23,7 +23,13 @@ int potentVal = 365;
 void setup() {
   analogWrite(potentPin, potentVal/4);
   lcd.begin(16, 2);
-  lcd.print("hello, world!");
+  lcd.print("GK Industrial Solutions");
+  for (int positionCounter = 0; positionCounter < 23; positionCounter++) {
+    // scroll one position left:
+    lcd.scrollDisplayLeft();
+    // wait a bit:
+    delay(200);
+  }
   
   Serial.begin(9600);
   while (!Serial);  // wait for serial port to connect. Needed for native USB port only
@@ -34,9 +40,7 @@ void setup() {
 }
 
 void loop() {
-  lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  lcd.print(millis() / 1000);
+  
   httpRequest();
   if (state == 1) 
     tone(relay_pin, 1000);   //Turn on relay
