@@ -18,21 +18,28 @@ int relay_pin = 8;
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int potentPin = A0;
-int potentVal = 365;
+int potentVal = 300;
+int Li          = 16;
+int Lii         = 0;
+
 
 void setup() {
   analogWrite(potentPin, potentVal/4);
   lcd.begin(16, 2);
   lcd.print("GK Industrial Solutions");
-  for (int positionCounter = 0; positionCounter < 23; positionCounter++) {
+  delay(2000);
+   for (int positionCounter = 0; positionCounter < 23; positionCounter++) {
     // scroll one position left:
     lcd.scrollDisplayLeft();
     // wait a bit:
-    delay(200);
+    delay(500);
   }
+  lcd.clear();
+  lcd.print("Connecting...");
+  lcd.blink();
   
   Serial.begin(9600);
-  while (!Serial);  // wait for serial port to connect. Needed for native USB port only
+    // wait for serial port to connect. Needed for native USB port only
   pinMode(relay_pin, OUTPUT);     // Relay
   
   ConectToWIFI(); 
@@ -42,13 +49,37 @@ void setup() {
 void loop() {
   
   httpRequest();
-  if (state == 1) 
-    tone(relay_pin, 1000);   //Turn on relay
-  else
+  if (state == 1) {
+    tone(relay_pin, 1000);  //Turn on relay
+    lcd.clear();
+    lcd.print("WiFi Connected!");
+    lcd.setCursor(0,1);
+    lcd.print(Scroll_LCD_Left("Issue detected, Buzzer ON"));
+    delay(300);
+    
+  } else {
     noTone(relay_pin);   //Turn off relay
-
+    lcd.clear();
+    lcd.print("WiFi Connected!");
+    lcd.setCursor(0,1);
+    lcd.print("Buzzer OFF");
+  }
   Serial.println(state);
 }
+
+String Scroll_LCD_Left(String StrDisplay){
+  String result;
+  String StrProcess = "                " + StrDisplay + "                ";
+  result = StrProcess.substring(Li,Lii);
+  Li++;
+  Lii++;
+  if (Li>StrProcess.length()){
+    Li=16;
+    Lii=0;
+  }
+  return result;
+}
+
 
 // this method makes a HTTP connection to the server:
 void httpRequest() 
@@ -143,6 +174,8 @@ void httpRequest()
   } else {
       // if you couldn't make a connection:
       Serial.println("connection failed");
+      lcd.setCursor(0,1);
+      lcd.print("cloud disconnected");
       state = 2;
   }
 
@@ -150,8 +183,6 @@ void httpRequest()
 
 void httpRequestPost() 
 {
-
-  
 /*
  * https://io.adafruit.com/api/docs/#operation/createGroupData
  * 
@@ -213,8 +244,6 @@ void httpRequestPost()
     // if you couldn't make a connection:
     Serial.println("connection failed!");
   }
-
-  
 }
 
 
@@ -231,6 +260,9 @@ void ConectToWIFI()
     delay(5000);
   }
   Serial.println("Connected to wifi");
+  lcd.clear();
+  lcd.noBlink();
+  lcd.print("WiFi Connected!");
   printWifiStatus();
 }
 
