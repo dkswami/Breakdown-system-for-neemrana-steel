@@ -68,7 +68,7 @@ void setup() {
    connecting();
    
    //sending connection status to cloud
-   String connectionStatus = "Device Connected";
+   String connectionStatus = "Connected";
    inputStationStatus->save(connectionStatus);
    
    // Synchronize current state
@@ -80,13 +80,7 @@ void setup() {
 }
 
 
-void loop() {
-  /*if(WiFi.status() != WL_CONNECTED) {
-    digitalWrite(GreenWifiLED, LOW);
-    connecting();
-  }
-  else {*/
-    
+void loop() { 
       // the interval at which you want to blink the LED.
       unsigned long currentMillis = millis();
       if (currentMillis - previousMillis >= interval) {

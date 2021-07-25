@@ -19,9 +19,7 @@ const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int potentPin = A0;
 int potentVal = 300;
-int Li          = 16;
-int Lii         = 0;
-
+char * messagePadded = "                Issue detected, Buzzer ON                ";
 
 void setup() {
   analogWrite(potentPin, potentVal/4);
@@ -36,27 +34,27 @@ void setup() {
   }
   lcd.clear();
   lcd.print("Connecting...");
-  lcd.blink();
-  
+  lcd.blink(); 
   Serial.begin(9600);
     // wait for serial port to connect. Needed for native USB port only
-  pinMode(relay_pin, OUTPUT);     // Relay
-  
+  pinMode(relay_pin, OUTPUT);     // Relay  
   ConectToWIFI(); 
   httpRequestPost();
 }
 
-void loop() {
-  
+void loop() { 
   httpRequest();
   if (state == 1) {
     tone(relay_pin, 1000);  //Turn on relay
     lcd.clear();
     lcd.print("WiFi Connected!");
     lcd.setCursor(0,1);
-    lcd.print(Scroll_LCD_Left("Issue detected, Buzzer ON"));
-    delay(300);
+    //lcd.print(Scroll_LCD_Left("Issue detected, Buzzer ON"));
     
+    for (int letter = 0; letter <= strlen(messagePadded) - 16; letter++) //From 0 to upto n-16 characters supply to below function
+    {
+      showLetters(0, letter);
+    }
   } else {
     noTone(relay_pin);   //Turn off relay
     lcd.clear();
@@ -67,19 +65,16 @@ void loop() {
   Serial.println(state);
 }
 
-String Scroll_LCD_Left(String StrDisplay){
-  String result;
-  String StrProcess = "                " + StrDisplay + "                ";
-  result = StrProcess.substring(Li,Lii);
-  Li++;
-  Lii++;
-  if (Li>StrProcess.length()){
-    Li=16;
-    Lii=0;
+void showLetters(int printStart, int startLetter)
+{
+  lcd.setCursor(printStart, 1);
+  for (int letter = startLetter; letter <= startLetter + 15; letter++) // Print only 16 chars in Line #2 starting 'startLetter'
+  {
+    lcd.print(messagePadded[letter]);
   }
-  return result;
+  lcd.print(" ");
+  delay(250);
 }
-
 
 // this method makes a HTTP connection to the server:
 void httpRequest() 
@@ -112,7 +107,6 @@ void httpRequest()
       Serial.println("connected to server");
       // Make a HTTP request:
       client.println("GET /api/v2/" IO_USERNAME "/feeds/on-off/data/last HTTP/1.1"); 
-      
       client.println("Host: io.adafruit.com");  
       client.println("Connection: close");
       client.println("Content-Type: application/json");  
@@ -123,7 +117,6 @@ void httpRequest()
         Serial.println(F("Failed to send request"));
         return;
       }
-        
       // Check HTTP status
       char status[32] = {0};
       client.readBytesUntil('\r', status, sizeof(status));
@@ -132,21 +125,18 @@ void httpRequest()
         Serial.println(status);
         return;
       }
-      
       // Skip HTTP headers
       char endOfHeaders[] = "\r\n\r\n";
       if (!client.find(endOfHeaders)) {
         Serial.println(F("Invalid response1"));
         return;
       }
-
       // Skip Adafruit headers
       char endOfHeaders2[] = "\r";
       if (!client.find(endOfHeaders2)) {
         Serial.println(F("Invalid response2"));
         return;
       }
-
       //Deserialize JSon
       const size_t capacity = JSON_OBJECT_SIZE(12) + 170;
       StaticJsonDocument<capacity> doc;
