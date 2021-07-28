@@ -34,8 +34,7 @@ int status = WL_IDLE_STATUS;
 String b1status = "NOT Pressed";
 String b2status = "NOT Pressed";
 String b3status = "NOT Pressed";
-//String b4status = "NOT Pressed";
-//String b5status = "NOT Pressed";
+
 String b6status = "NOT Pressed";
 
 // for INTERNET LED to blink
@@ -86,7 +85,6 @@ void setup() {
    pushbuttona->get();// request feed value (message) from AIO
    pushbuttonb->get();
    pushbuttonc->get();
-   //resetbutton->get();
    buzzer->get();
    ControllerDeviceStatus->get();
 }
@@ -177,8 +175,6 @@ void loop() {
         b1status = "NOT Pressed";
         b2status = "NOT Pressed";
         b3status = "NOT Pressed";
-        //b4status = "NOT Pressed";
-        //b5status = "NOT Pressed";
         //b6status = "Reset Button Pressed";
         
         
@@ -187,7 +183,7 @@ void loop() {
         pushbuttonc->save(b3status);
         httpRequestPost("pushbuttond","NOT Pressed");
         httpRequestPost("pushbuttone","NOT Pressed");
-        
+        httpRequestPost("resetbutton","Pressed");
         String buzzerstatus = "OFF";
         buzzer->save(buzzerstatus);
         digitalWrite(BuzzerLED, LOW);
