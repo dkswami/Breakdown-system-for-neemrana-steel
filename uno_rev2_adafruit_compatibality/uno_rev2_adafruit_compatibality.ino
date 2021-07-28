@@ -11,7 +11,7 @@
 #define AIO_button2_FEED "pushbuttonb"
 #define AIO_button3_FEED "pushbuttonc"
 #define AIO_buzzer_FEED "on-off"
-#define AIO_connection_FEED "inputstationstatus"
+#define AIO_connection_FEED "controllerdevicestatus"
 // Libraries
 
 #include <AdafruitIO_WiFi.h>
@@ -45,7 +45,7 @@ AdafruitIO_Feed *pushbuttona = aio.feed(AIO_button1_FEED);
 AdafruitIO_Feed *pushbuttonb = aio.feed(AIO_button2_FEED);
 AdafruitIO_Feed *pushbuttonc = aio.feed(AIO_button3_FEED);
 AdafruitIO_Feed *buzzer = aio.feed(AIO_buzzer_FEED);
-AdafruitIO_Feed *inputStationStatus = aio.feed(AIO_connection_FEED);
+AdafruitIO_Feed *ControllerDeviceStatus = aio.feed(AIO_connection_FEED);
 
 void setup() {
    // Pin configuration
@@ -77,7 +77,7 @@ void setup() {
    pushbuttonb->get();
    pushbuttonc->get();
    buzzer->get();
-   inputStationStatus->get();
+   ControllerDeviceStatus->get();
 }
 
 

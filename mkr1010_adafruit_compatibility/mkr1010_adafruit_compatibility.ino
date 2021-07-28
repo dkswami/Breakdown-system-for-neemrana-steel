@@ -35,8 +35,8 @@ void setup() {
   lcd.clear();
   lcd.print("Connecting...");
   lcd.blink(); 
+  
   Serial.begin(9600);
-    // wait for serial port to connect. Needed for native USB port only
   pinMode(relay_pin, OUTPUT);     // Relay  
   ConectToWIFI(); 
   httpRequestPost();
@@ -200,7 +200,7 @@ void httpRequestPost()
 
   StaticJsonDocument<96> doc;
 
-  doc["key"] = "outputstationstatus";
+  doc["key"] = "actuatordevicestatus";
   doc["value"] = "Connected";
   /*// Add the "feeds" array
   JsonArray feeds = doc.createNestedArray("feeds");
