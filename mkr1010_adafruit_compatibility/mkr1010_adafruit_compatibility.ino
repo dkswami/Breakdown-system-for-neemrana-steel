@@ -45,19 +45,15 @@ void setup() {
 void loop() { 
   httpRequest();
   if (state == 1) {
-    //tone(relay_pin, 1000);  //Turn on relay
     digitalWrite(relay_pin, HIGH);
     lcd.clear();
     lcd.print("WiFi Connected!");
     lcd.setCursor(0,1);
-    //lcd.print(Scroll_LCD_Left("Issue detected, Buzzer ON"));
-    
     for (int letter = 0; letter <= strlen(messagePadded) - 16; letter++) //From 0 to upto n-16 characters supply to below function
     {
       showLetters(0, letter);
     }
   } else {
-    //noTone(relay_pin);   //Turn off relay
     digitalWrite(relay_pin, LOW);
     lcd.clear();
     lcd.print("WiFi Connected!");
@@ -217,7 +213,7 @@ void httpRequestPost()
   {
     Serial.println("connected to server");
     // Make a HTTP request:
-    client.println("POST /api/v2/" IO_USERNAME "/feeds/outputstationstatus/data HTTP/1.1"); 
+    client.println("POST /api/v2/" IO_USERNAME "/feeds/actuatordevicestatus/data HTTP/1.1"); 
     client.println("Host: io.adafruit.com");  
     client.println("Connection: close");  
     client.print("Content-Length: ");  
