@@ -10,6 +10,9 @@
 #define AIO_button1_FEED "pushbuttona"
 #define AIO_button2_FEED "pushbuttonb"
 #define AIO_button3_FEED "pushbuttonc"
+#define AIO_button4_FEED "pushbuttond"
+#define AIO_button5_FEED "pushbuttone"
+#define AIO_button6_FEED "resetbutton"
 #define AIO_buzzer_FEED "on-off"
 #define AIO_connection_FEED "controllerdevicestatus"
 // Libraries
@@ -22,6 +25,8 @@ int button1 = 8;
 int button2 = 9;
 int button3 = 10;
 int button4 = 11;
+int button5 = 12;
+int button6 = 13;
 int powerLED = 2;
 int RedWifiLED = 3;
 int GreenWifiLED = 4;
@@ -32,6 +37,9 @@ int status = WL_IDLE_STATUS;
 String b1status = "NOT Pressed";
 String b2status = "NOT Pressed";
 String b3status = "NOT Pressed";
+String b4status = "NOT Pressed";
+String b5status = "NOT Pressed";
+String b6status = "NOT Pressed";
 
 // for INTERNET LED to blink
 unsigned long previousMillis = 0;
@@ -44,6 +52,9 @@ AdafruitIO_WiFi aio(AIO_USERNAME, AIO_KEY, WIFI_SSID, WIFI_PASS, SPIWIFI_SS, SPI
 AdafruitIO_Feed *pushbuttona = aio.feed(AIO_button1_FEED);
 AdafruitIO_Feed *pushbuttonb = aio.feed(AIO_button2_FEED);
 AdafruitIO_Feed *pushbuttonc = aio.feed(AIO_button3_FEED);
+AdafruitIO_Feed *pushbuttond = aio.feed(AIO_button4_FEED);
+AdafruitIO_Feed *pushbuttone = aio.feed(AIO_button5_FEED);
+AdafruitIO_Feed *ResetButton = aio.feed(AIO_button6_FEED);
 AdafruitIO_Feed *buzzer = aio.feed(AIO_buzzer_FEED);
 AdafruitIO_Feed *ControllerDeviceStatus = aio.feed(AIO_connection_FEED);
 
@@ -53,6 +64,8 @@ void setup() {
    pinMode(button2, INPUT_PULLUP);
    pinMode(button3, INPUT_PULLUP);
    pinMode(button4, INPUT_PULLUP);
+   pinMode(button5, INPUT_PULLUP);
+   pinMode(button6, INPUT_PULLUP);
    pinMode(powerLED, OUTPUT);
    pinMode(RedWifiLED, OUTPUT);
    pinMode(GreenWifiLED, OUTPUT);
@@ -70,12 +83,15 @@ void setup() {
    
    //sending connection status to cloud
    String connectionStatus = "Connected";
-   inputStationStatus->save(connectionStatus);
+   ControllerDeviceStatus->save(connectionStatus);
    
    // Synchronize current state
    pushbuttona->get();// request feed value (message) from AIO
    pushbuttonb->get();
    pushbuttonc->get();
+   pushbuttond->get();
+   pushbuttone->get();
+   ResetButton->get();
    buzzer->get();
    ControllerDeviceStatus->get();
 }
@@ -143,14 +159,46 @@ void loop() {
           }
       }
       else if(digitalRead(button4) == LOW){
+        b4status = "Pressed";
+        String buzzerstatus = "ON";
+        Serial.print("sending button4 -> ");
+        Serial.println(b4status);
+        pushbuttond->save(b4status);
+        buzzer->save(buzzerstatus);
+        digitalWrite(BuzzerLED, HIGH);
+        while(digitalRead(button4) == LOW) // Wait for switch to be released
+          {
+            delay(20);
+          }
+      }
+      else if(digitalRead(button5) == LOW){
+        b5status = "Pressed";
+        String buzzerstatus = "ON";
+        Serial.print("sending button3 -> ");
+        Serial.println(b5status);
+        pushbuttone->save(b5status);
+        buzzer->save(buzzerstatus);
+        digitalWrite(BuzzerLED, HIGH);
+        while(digitalRead(button5) == LOW) // Wait for switch to be released
+          {
+            delay(20);
+          }
+      }
+      else if(digitalRead(button6) == LOW){
         b1status = "NOT Pressed";
         b2status = "NOT Pressed";
         b3status = "NOT Pressed";
+        b4status = "NOT Pressed";
+        b5status = "NOT Pressed";
+        b6status = "Reset Button Pressed";
         String buzzerstatus = "OFF";
         Serial.println("All value reset and Sound Alert Stopped");
         pushbuttona->save(b1status);
         pushbuttonb->save(b2status);
         pushbuttonc->save(b3status);
+        pushbuttond->save(b4status);
+        pushbuttone->save(b5status);
+        ResetButton->save(b6status);
         buzzer->save(buzzerstatus);
         digitalWrite(BuzzerLED, LOW);
       }
