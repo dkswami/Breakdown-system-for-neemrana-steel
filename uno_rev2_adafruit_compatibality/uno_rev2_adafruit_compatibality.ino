@@ -52,6 +52,7 @@ void setup() {
    pinMode(button1, INPUT_PULLUP);
    pinMode(button2, INPUT_PULLUP);
    pinMode(button3, INPUT_PULLUP);
+   pinMode(button4, INPUT_PULLUP);
    pinMode(powerLED, OUTPUT);
    pinMode(RedWifiLED, OUTPUT);
    pinMode(GreenWifiLED, OUTPUT);

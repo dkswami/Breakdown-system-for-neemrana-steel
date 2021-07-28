@@ -12,7 +12,7 @@ char server[] = "io.adafruit.com"; // name address for Adafruit IOT Cloud
 WiFiClient client;
 
 int state = 2;
-int relay_pin = 8;
+int relay_pin = 6;
 
 // LCD variables
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
@@ -45,7 +45,8 @@ void setup() {
 void loop() { 
   httpRequest();
   if (state == 1) {
-    tone(relay_pin, 1000);  //Turn on relay
+    //tone(relay_pin, 1000);  //Turn on relay
+    digitalWrite(relay_pin, HIGH);
     lcd.clear();
     lcd.print("WiFi Connected!");
     lcd.setCursor(0,1);
@@ -56,7 +57,8 @@ void loop() {
       showLetters(0, letter);
     }
   } else {
-    noTone(relay_pin);   //Turn off relay
+    //noTone(relay_pin);   //Turn off relay
+    digitalWrite(relay_pin, LOW);
     lcd.clear();
     lcd.print("WiFi Connected!");
     lcd.setCursor(0,1);
