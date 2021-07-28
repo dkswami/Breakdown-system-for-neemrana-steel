@@ -10,15 +10,12 @@
 #define AIO_button1_FEED "pushbuttona"
 #define AIO_button2_FEED "pushbuttonb"
 #define AIO_button3_FEED "pushbuttonc"
-#define AIO_button4_FEED "pushbuttond"
-#define AIO_button5_FEED "pushbuttone"
-#define AIO_button6_FEED "resetbutton"
 #define AIO_buzzer_FEED "on-off"
 #define AIO_connection_FEED "controllerdevicestatus"
 // Libraries
 
 #include <AdafruitIO_WiFi.h>
-
+#include <ArduinoJson.h>  
 
 // Pin Mapping
 int button1 = 8;
@@ -37,8 +34,8 @@ int status = WL_IDLE_STATUS;
 String b1status = "NOT Pressed";
 String b2status = "NOT Pressed";
 String b3status = "NOT Pressed";
-String b4status = "NOT Pressed";
-String b5status = "NOT Pressed";
+//String b4status = "NOT Pressed";
+//String b5status = "NOT Pressed";
 String b6status = "NOT Pressed";
 
 // for INTERNET LED to blink
@@ -52,11 +49,11 @@ AdafruitIO_WiFi aio(AIO_USERNAME, AIO_KEY, WIFI_SSID, WIFI_PASS, SPIWIFI_SS, SPI
 AdafruitIO_Feed *pushbuttona = aio.feed(AIO_button1_FEED);
 AdafruitIO_Feed *pushbuttonb = aio.feed(AIO_button2_FEED);
 AdafruitIO_Feed *pushbuttonc = aio.feed(AIO_button3_FEED);
-AdafruitIO_Feed *pushbuttond = aio.feed(AIO_button4_FEED);
-AdafruitIO_Feed *pushbuttone = aio.feed(AIO_button5_FEED);
-AdafruitIO_Feed *ResetButton = aio.feed(AIO_button6_FEED);
 AdafruitIO_Feed *buzzer = aio.feed(AIO_buzzer_FEED);
 AdafruitIO_Feed *ControllerDeviceStatus = aio.feed(AIO_connection_FEED);
+
+WiFiClient client;
+char server[] = "io.adafruit.com";
 
 void setup() {
    // Pin configuration
@@ -89,9 +86,7 @@ void setup() {
    pushbuttona->get();// request feed value (message) from AIO
    pushbuttonb->get();
    pushbuttonc->get();
-   pushbuttond->get();
-   pushbuttone->get();
-   ResetButton->get();
+   //resetbutton->get();
    buzzer->get();
    ControllerDeviceStatus->get();
 }
@@ -159,26 +154,20 @@ void loop() {
           }
       }
       else if(digitalRead(button4) == LOW){
-        b4status = "Pressed";
+        httpRequestPost("pushbuttond","Pressed");
         String buzzerstatus = "ON";
-        Serial.print("sending button4 -> ");
-        Serial.println(b4status);
-        pushbuttond->save(b4status);
         buzzer->save(buzzerstatus);
-        digitalWrite(BuzzerLED, HIGH);
+        digitalWrite(BuzzerLED, HIGH);        
         while(digitalRead(button4) == LOW) // Wait for switch to be released
           {
             delay(20);
           }
       }
       else if(digitalRead(button5) == LOW){
-        b5status = "Pressed";
+        httpRequestPost("pushbuttone","Pressed");
         String buzzerstatus = "ON";
-        Serial.print("sending button3 -> ");
-        Serial.println(b5status);
-        pushbuttone->save(b5status);
         buzzer->save(buzzerstatus);
-        digitalWrite(BuzzerLED, HIGH);
+        digitalWrite(BuzzerLED, HIGH);        
         while(digitalRead(button5) == LOW) // Wait for switch to be released
           {
             delay(20);
@@ -188,23 +177,62 @@ void loop() {
         b1status = "NOT Pressed";
         b2status = "NOT Pressed";
         b3status = "NOT Pressed";
-        b4status = "NOT Pressed";
-        b5status = "NOT Pressed";
-        b6status = "Reset Button Pressed";
-        String buzzerstatus = "OFF";
-        Serial.println("All value reset and Sound Alert Stopped");
+        //b4status = "NOT Pressed";
+        //b5status = "NOT Pressed";
+        //b6status = "Reset Button Pressed";
+        
+        
         pushbuttona->save(b1status);
         pushbuttonb->save(b2status);
         pushbuttonc->save(b3status);
-        pushbuttond->save(b4status);
-        pushbuttone->save(b5status);
-        ResetButton->save(b6status);
+        httpRequestPost("pushbuttond","NOT Pressed");
+        httpRequestPost("pushbuttone","NOT Pressed");
+        
+        String buzzerstatus = "OFF";
         buzzer->save(buzzerstatus);
         digitalWrite(BuzzerLED, LOW);
+        Serial.println("All value reset and Sound Alert Stopped");
+        while(digitalRead(button5) == LOW) // Wait for switch to be released
+          {
+            delay(20);
+          }
       }
-  //}
-  
 }
+
+void httpRequestPost(String key, String value) {
+  StaticJsonDocument<96> doc;
+
+  doc["key"] = key;
+  doc["value"] = value;
+  
+  client.stop();
+
+  Serial.println("\nStarting connection to server...");
+  if (client.connect(server, 80)) 
+  {
+    Serial.println("connected to server");
+    // Make a HTTP request:
+    client.println("POST /api/v2/" AIO_USERNAME "/feeds/" + key +"/data HTTP/1.1"); 
+    client.println("Host: io.adafruit.com");  
+    client.println("Connection: close");  
+    client.print("Content-Length: ");  
+    client.println(measureJson(doc));  
+    client.println("Content-Type: application/json");  
+    client.println("X-AIO-Key: " AIO_KEY); 
+
+    // Terminate headers with a blank line
+    client.println();
+    serializeJsonPretty(doc, Serial);
+    // Send JSON document in body
+    serializeJson(doc, client);
+    Serial.println("data sent!");
+    
+  } else {
+    // if you couldn't make a connection:
+    Serial.println("connection failed!");
+  }
+}
+
 
 void connecting() {
    // Adafruit IO connection and configuration
