@@ -35,8 +35,8 @@ void setup() {
   lcd.clear();
   lcd.print("Connecting...");
   lcd.blink(); 
-  
   Serial.begin(9600);
+    // wait for serial port to connect. Needed for native USB port only
   pinMode(relay_pin, OUTPUT);     // Relay  
   ConectToWIFI(); 
   httpRequestPost();
@@ -45,15 +45,19 @@ void setup() {
 void loop() { 
   httpRequest();
   if (state == 1) {
+    //tone(relay_pin, 1000);  //Turn on relay
     digitalWrite(relay_pin, HIGH);
     lcd.clear();
     lcd.print("WiFi Connected!");
     lcd.setCursor(0,1);
+    //lcd.print(Scroll_LCD_Left("Issue detected, Buzzer ON"));
+    
     for (int letter = 0; letter <= strlen(messagePadded) - 16; letter++) //From 0 to upto n-16 characters supply to below function
     {
       showLetters(0, letter);
     }
   } else {
+    //noTone(relay_pin);   //Turn off relay
     digitalWrite(relay_pin, LOW);
     lcd.clear();
     lcd.print("WiFi Connected!");
