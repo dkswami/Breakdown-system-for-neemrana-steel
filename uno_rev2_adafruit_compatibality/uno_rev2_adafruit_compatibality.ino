@@ -91,6 +91,11 @@ void setup() {
 
 
 void loop() { 
+      if( aio.status() < AIO_CONNECTED ) {
+        digitalWrite(GreenWifiLED, LOW);
+        digitalWrite(InternetLED, LOW);
+        connecting();
+      }
       // the interval at which you want to blink the LED.
       unsigned long currentMillis = millis();
       if (currentMillis - previousMillis >= interval) {
@@ -234,12 +239,15 @@ void connecting() {
    // Adafruit IO connection and configuration
    Serial.print("Connecting to Adafruit IO");
    aio.connect();  // connect to Adafruit IO service
+   Serial.println(aio.status());
+   Serial.println(AIO_CONNECTED);
    while(aio.status() < AIO_CONNECTED) {
       Serial.print(".");
       digitalWrite(RedWifiLED, HIGH);
-      delay(500);  // wait 1 second between checks
+      delay(2000);  // wait 1 second between checks
       digitalWrite(RedWifiLED, LOW);
-      delay(500);
+      Serial.println(aio.status());
+      connecting();
    }
 
     digitalWrite(GreenWifiLED, HIGH);

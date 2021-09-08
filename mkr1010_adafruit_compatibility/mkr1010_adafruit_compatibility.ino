@@ -81,7 +81,9 @@ void showLetters(int printStart, int startLetter)
 // this method makes a HTTP connection to the server:
 void httpRequest() 
 {
+
   // JSon
+  
 /*
  * GET: /api/v2/{username}/feeds/{feed_key}/data/last
 {
@@ -99,6 +101,8 @@ void httpRequest()
   "created_epoch": 0
 }
  */
+
+
   // close any connection before send a new request.
   // This will free the socket on the Nina module
   client.stop();
@@ -106,9 +110,11 @@ void httpRequest()
   Serial.println("\nStarting connection to server...");
   if (client.connect(server, 80)) 
   {
+    
       Serial.println("connected to server");
       // Make a HTTP request:
       client.println("GET /api/v2/" IO_USERNAME "/feeds/on-off/data/last HTTP/1.1"); 
+      
       client.println("Host: io.adafruit.com");  
       client.println("Connection: close");
       client.println("Content-Type: application/json");  
@@ -119,29 +125,32 @@ void httpRequest()
         Serial.println(F("Failed to send request"));
         return;
       }
+        
       // Check HTTP status
       char status[32] = {0};
       client.readBytesUntil('\r', status, sizeof(status));
       if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
         Serial.print(F("Unexpected response: "));
         Serial.println(status);
-        return;
+        
       }
+      
       // Skip HTTP headers
       char endOfHeaders[] = "\r\n\r\n";
       if (!client.find(endOfHeaders)) {
         Serial.println(F("Invalid response1"));
         return;
       }
+
       // Skip Adafruit headers
       char endOfHeaders2[] = "\r";
       if (!client.find(endOfHeaders2)) {
         Serial.println(F("Invalid response2"));
         return;
       }
+
       //Deserialize JSon
-      const size_t capacity = JSON_OBJECT_SIZE(12) + 170;
-      StaticJsonDocument<capacity> doc;
+      StaticJsonDocument<384> doc;
 
       DeserializationError error = deserializeJson(doc, client);
       if (error) {
@@ -151,23 +160,21 @@ void httpRequest()
       }
       
       const char* value = doc["value"];
-      if (strcmp(value, "ON") == 0) 
+    
+      Serial.print("get data!:");
+      Serial.println(value);
+
+       if (strcmp(value, "ON") == 0) 
           state = 1;   
        else if (strcmp(value, "OFF") == 0) 
           state = 0;
        else
           state = 2;   
       
-      Serial.print("get data!:");
-      Serial.println(value);
-
-       
     
   } else {
       // if you couldn't make a connection:
       Serial.println("connection failed");
-      lcd.setCursor(0,1);
-      lcd.print("cloud disconnected");
       state = 2;
   }
 
@@ -210,7 +217,6 @@ void httpRequestPost()
   
   // close any connection before send a new request.
   // This will free the socket on the Nina module
-  client.stop();
 
   Serial.println("\nStarting connection to server...");
   if (client.connect(server, 80)) 
