@@ -19,10 +19,11 @@ const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int potentPin = A0;
 int potentVal = 300;
-char * messagePadded = "                Issue detected, Buzzer ON                ";
 
 void setup() {
   analogWrite(potentPin, potentVal/4);
+  pinMode(relay_pin, OUTPUT);     // Relay  
+  
   lcd.begin(16, 2);
   lcd.print("GK Industrial Solutions");
   delay(2000);
@@ -32,33 +33,57 @@ void setup() {
     // wait a bit:
     delay(500);
   }
-  lcd.clear();
-  lcd.print("Connecting...");
-  lcd.blink(); 
+   
   Serial.begin(9600);
     // wait for serial port to connect. Needed for native USB port only
-  pinMode(relay_pin, OUTPUT);     // Relay  
+  
   ConectToWIFI(); 
   httpRequestPost();
 }
 
-void loop() { 
-  httpRequest();
-  if (state == 1) {
-    //tone(relay_pin, 1000);  //Turn on relay
-    digitalWrite(relay_pin, HIGH);
-    lcd.clear();
-    lcd.print("WiFi Connected!");
-    lcd.setCursor(0,1);
-    //lcd.print(Scroll_LCD_Left("Issue detected, Buzzer ON"));
-    
-    for (int letter = 0; letter <= strlen(messagePadded) - 16; letter++) //From 0 to upto n-16 characters supply to below function
-    {
-      showLetters(0, letter);
+void loop() {
+
+  String BuzzerValue = httpRequest("on-off");
+  Serial.println(BuzzerValue);
+  if (BuzzerValue == "ON") 
+    state = 1;   
+  else if (BuzzerValue == "OFF") 
+    state = 0;
+  else
+    state = 2; 
+
+
+  if (state == 1) { 
+    digitalWrite(relay_pin, HIGH); //Turn on relay
+    //To check which button is pressed
+    if (httpRequest("pushbuttond") == "Pressed"){
+      lcd.setCursor(0,1);
+      lcd.print("Maint Issue");
+      Serial.println("Pushbuttond : Maint Issue");
     }
+    else if (httpRequest("pushbuttonc") == "Pressed"){
+      lcd.setCursor(0,1);
+      lcd.print("Quality Issue");
+      Serial.println("Pushbuttonc : Quality Issue");
+    }
+    else if (httpRequest("pushbuttonb") == "Pressed"){
+      lcd.setCursor(0,1);
+      lcd.print("Production Issue");
+      Serial.println("Pushbuttonb : Production Issue");
+    }
+    else if (httpRequest("pushbuttona") == "Pressed"){
+      lcd.setCursor(0,1);
+      lcd.print("ToolRoom Issue");
+      Serial.println("Pushbuttona : Tool Room Issue");
+    }
+    else if (httpRequest("pushbuttone") == "Pressed"){
+      lcd.setCursor(0,1);
+      lcd.print("Planning Issue");
+      Serial.println("Pushbuttone : Planning Issue");
+    }
+    
   } else {
-    //noTone(relay_pin);   //Turn off relay
-    digitalWrite(relay_pin, LOW);
+    digitalWrite(relay_pin, LOW); //Turn off relay
     lcd.clear();
     lcd.print("WiFi Connected!");
     lcd.setCursor(0,1);
@@ -67,23 +92,11 @@ void loop() {
   Serial.println(state);
 }
 
-void showLetters(int printStart, int startLetter)
-{
-  lcd.setCursor(printStart, 1);
-  for (int letter = startLetter; letter <= startLetter + 15; letter++) // Print only 16 chars in Line #2 starting 'startLetter'
-  {
-    lcd.print(messagePadded[letter]);
-  }
-  lcd.print(" ");
-  delay(250);
-}
 
 // this method makes a HTTP connection to the server:
-void httpRequest() 
+String httpRequest(String FEED_NAME) 
 {
-
-  // JSon
-  
+  // JSon 
 /*
  * GET: /api/v2/{username}/feeds/{feed_key}/data/last
 {
@@ -102,7 +115,6 @@ void httpRequest()
 }
  */
 
-
   // close any connection before send a new request.
   // This will free the socket on the Nina module
   client.stop();
@@ -110,10 +122,9 @@ void httpRequest()
   Serial.println("\nStarting connection to server...");
   if (client.connect(server, 80)) 
   {
-    
       Serial.println("connected to server");
       // Make a HTTP request:
-      client.println("GET /api/v2/" IO_USERNAME "/feeds/on-off/data/last HTTP/1.1"); 
+      client.println("GET /api/v2/" IO_USERNAME "/feeds/"+FEED_NAME+"/data/last HTTP/1.1"); 
       
       client.println("Host: io.adafruit.com");  
       client.println("Connection: close");
@@ -123,30 +134,26 @@ void httpRequest()
       // Terminate headers with a blank line
       if (client.println() == 0) {
         Serial.println(F("Failed to send request"));
-        return;
       }
-        
+      
       // Check HTTP status
       char status[32] = {0};
       client.readBytesUntil('\r', status, sizeof(status));
       if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
         Serial.print(F("Unexpected response: "));
         Serial.println(status);
-        
       }
       
       // Skip HTTP headers
       char endOfHeaders[] = "\r\n\r\n";
       if (!client.find(endOfHeaders)) {
         Serial.println(F("Invalid response1"));
-        return;
       }
-
+      
       // Skip Adafruit headers
       char endOfHeaders2[] = "\r";
       if (!client.find(endOfHeaders2)) {
         Serial.println(F("Invalid response2"));
-        return;
       }
 
       //Deserialize JSon
@@ -156,25 +163,18 @@ void httpRequest()
       if (error) {
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.c_str());
-        return;
       }
       
       const char* value = doc["value"];
     
       Serial.print("get data!:");
       Serial.println(value);
-
-       if (strcmp(value, "ON") == 0) 
-          state = 1;   
-       else if (strcmp(value, "OFF") == 0) 
-          state = 0;
-       else
-          state = 2;   
-      
+      return value;   
     
   } else {
       // if you couldn't make a connection:
       Serial.println("connection failed");
+      ConectToWIFI();
       state = 2;
   }
 
@@ -248,9 +248,12 @@ void httpRequestPost()
 void ConectToWIFI()
 {
   // attempt to connect to Wifi network:
-  while (status != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
+    lcd.clear();
+    lcd.print("Connecting...");
+    lcd.blink();
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
 
